@@ -462,6 +462,7 @@ class NordPoolDeliveryCard extends HTMLElement {
       nordpool_config_entry: "",
       area: "SE4",
       currency: "SEK",
+      display_unit: "kWh",
       tomorrow_available_entity: "binary_sensor.nord_pool_se4_tomorrow_price_available",
       ...config,
     };
@@ -507,10 +508,11 @@ class NordPoolDeliveryCard extends HTMLElement {
     const payload = result?.response ?? result?.service_response ?? result;
     const rows = payload?.[area] ?? payload?.prices?.[area] ?? payload?.response?.[area];
     if (!Array.isArray(rows)) return [];
+    const divisor = this._config.display_unit === "MWh" ? 1 : 1000;
     return rows.map((row) => ({
       ts: Date.parse(row.start),
       end: Date.parse(row.end),
-      value: Number.parseFloat(row.price) / 1000,
+      value: Number.parseFloat(row.price) / divisor,
     })).filter((row) => Number.isFinite(row.ts) && Number.isFinite(row.end) && Number.isFinite(row.value));
   }
 
@@ -597,7 +599,7 @@ class NordPoolDeliveryCard extends HTMLElement {
       const rows = this._prices[day];
       if (!rows.length) return "";
       const peak = rows.reduce((best, row) => row.value > best.value ? row : best, rows[0]);
-      return `${day === "today" ? "Today" : "Tomorrow"}: ${peak.value.toFixed(3)} ${this._config.currency}/kWh at ${this._formatTime(peak.ts)}`;
+      return `${day === "today" ? "Today" : "Tomorrow"}: ${peak.value.toFixed(this._config.display_unit === "MWh" ? 2 : 3)} ${this._config.currency}/${this._config.display_unit} at ${this._formatTime(peak.ts)}`;
     }).filter(Boolean).join(" · ");
     const status = this._error ? `<div class="notice error">Price request failed: ${escapeHtml(this._error)}</div>`
       : this._loading && !this._prices.today.length ? `<div class="notice">Loading delivery prices…</div>`
@@ -607,7 +609,7 @@ class NordPoolDeliveryCard extends HTMLElement {
       h1{font-size:20px;margin:0 0 4px}.sub,.axis,.meta{fill:var(--secondary-text-color);color:var(--secondary-text-color);font-size:11px}
       .controls{display:flex;gap:8px;align-items:center;margin:14px 0 8px}.toggle{border:1px solid var(--divider-color);border-radius:999px;padding:6px 12px;background:transparent;color:var(--secondary-text-color);cursor:pointer}.toggle.active.today{background:#f6c744;color:#1b1b1b}.toggle.active.tomorrow{background:#42a5f5;color:#fff}.toggle:disabled{opacity:.4;cursor:not-allowed}
       svg{display:block;width:100%;height:auto;min-height:220px}.grid{stroke:var(--divider-color);stroke-width:1;opacity:.65}.axis{font-size:10px}.today-line{fill:none;stroke:#f6c744;stroke-width:3}.tomorrow-line{fill:none;stroke:#42a5f5;stroke-width:3}.meta{margin-top:7px}.notice{padding:12px;border:1px dashed var(--divider-color);border-radius:10px;color:var(--secondary-text-color)}.error{color:#ff7b72}
-    </style><ha-card><div class="card"><h1>${escapeHtml(this._config.title)}</h1><div class="sub">Complete 15-minute delivery-day curves · raw spot excluding VAT and fees</div><div class="controls"><button class="toggle today ${this._visible.today ? "active" : ""}" data-day="today">Today</button><button class="toggle tomorrow ${this._visible.tomorrow ? "active" : ""}" data-day="tomorrow" ${hasTomorrow ? "" : "disabled"}>${hasTomorrow ? "Tomorrow" : "Tomorrow unavailable"}</button></div>${status}${shown.length ? `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Nord Pool ${escapeHtml(this._config.area)} today and tomorrow prices in ${escapeHtml(this._config.currency)} per kilowatt-hour">${yLines}${xLabels}${todayPath ? `<path class="today-line" d="${todayPath}"/>` : ""}${tomorrowPath ? `<path class="tomorrow-line" d="${tomorrowPath}"/>` : ""}</svg><div class="meta">${escapeHtml(peaks)}</div>` : ""}</div></ha-card>`;
+    </style><ha-card><div class="card"><h1>${escapeHtml(this._config.title)}</h1><div class="sub">Complete 15-minute delivery-day curves · ${escapeHtml(this._config.currency)}/${escapeHtml(this._config.display_unit)} · raw spot excluding VAT and fees</div><div class="controls"><button class="toggle today ${this._visible.today ? "active" : ""}" data-day="today">Today</button><button class="toggle tomorrow ${this._visible.tomorrow ? "active" : ""}" data-day="tomorrow" ${hasTomorrow ? "" : "disabled"}>${hasTomorrow ? "Tomorrow" : "Tomorrow unavailable"}</button></div>${status}${shown.length ? `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Nord Pool ${escapeHtml(this._config.area)} today and tomorrow prices in ${escapeHtml(this._config.currency)} per ${escapeHtml(this._config.display_unit)}">${yLines}${xLabels}${todayPath ? `<path class="today-line" d="${todayPath}"/>` : ""}${tomorrowPath ? `<path class="tomorrow-line" d="${tomorrowPath}"/>` : ""}</svg><div class="meta">${escapeHtml(peaks)}</div>` : ""}</div></ha-card>`;
     this.shadowRoot.querySelectorAll?.(".toggle:not(:disabled)").forEach((button) => button.addEventListener("click", () => {
       this._visible[button.dataset.day] = !this._visible[button.dataset.day];
       this._render();
