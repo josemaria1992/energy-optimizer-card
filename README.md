@@ -81,5 +81,7 @@ that support custom card form schemas.
 
 The card throttles failed history requests, preserves unavailable-history
 gaps, and uses the Home Assistant timezone across 23/25-hour DST days. The
-delivery-price card was installed through HACS on 2026-09-10.
-
+delivery-price card was published to the public repository, downloaded through
+HACS, browser-reloaded, and verified on the live Energy Control Center on
+2026-09-10. Its EUR/MWh curve showed the SE4 daily maximum at 20:15 local,
+matching the Nord Pool delivery-day page.
