@@ -45,7 +45,12 @@ title: Nord Pool SE4 — today & tomorrow
 nordpool_config_entry: YOUR_NORDPOOL_CONFIG_ENTRY_ID
 area: SE4
 currency: SEK
+display_unit: kWh
 ```
+
+Set `currency: EUR` and `display_unit: MWh` to match the units used by the
+Nord Pool delivery-day website. Use `currency: SEK` and `display_unit: kWh`
+for optimizer accounting units.
 
 ```yaml
 type: custom:energy-optimizer-card
