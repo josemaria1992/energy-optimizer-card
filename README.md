@@ -79,7 +79,7 @@ left blank because they are not measured yet. The card also exposes a small
 visual editor for the title and visibility flags on Home Assistant versions
 that support custom card form schemas.
 
-The local audit fixes throttle failed history requests, preserve unavailable
-history gaps, and use the Home Assistant timezone with 23/25-hour DST days.
-They are not published to GitHub or installed on Home Assistant automatically.
+The card throttles failed history requests, preserves unavailable-history
+gaps, and uses the Home Assistant timezone across 23/25-hour DST days. The
+delivery-price card was installed through HACS on 2026-09-10.
 
